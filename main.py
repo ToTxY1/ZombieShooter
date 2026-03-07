@@ -4,7 +4,7 @@ class Game:
     def __init__(self):
         pygame.init()
         self.screen = pygame.display.set_mode((1280, 720))
-        pygame.display.set_caption("Mastermind")
+        pygame.display.set_caption("Zombie Shooter")
         self.clock = pygame.time.Clock()
         self.running = True
         self.gravity = 0
