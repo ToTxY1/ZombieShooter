@@ -11,6 +11,7 @@ class Game:
         self.movement = 0
         self.facing = True
         self.moving = False
+        self.shooting = pygame.time.get_ticks() / 1000
 
         """
         player making
@@ -35,15 +36,20 @@ class Game:
         self.mirroredPlayerMovingMask = pygame.mask.from_surface(self.mirroredPlayerSurface)
         self.mirroredPlayerMovingRectangle = self.playerMovingMask.get_rect(center=(100,100))
 
-        #todo: add base player walking tracking movement variable to see if the player is moving and in which direction
-        #Images are uploaded
+        """
+        Bullet
+        """
+        self.bullet = pygame.image.load("Graphics/Bullet.png").convert_alpha()
+        self.bullet = pygame.transform.scale(self.bullet, (25, 25))
+        self.bulletMask = pygame.mask.from_surface(self.bullet)
+        self.bulletRectangle = self.bulletMask.get_rect(center=(100, 535))
 
+        self.bulletShot = False
         """
         background making
         """
         self.gameBackground = pygame.image.load("Graphics/game Background.png").convert_alpha()
         self.gameBackground = pygame.transform.scale(self.gameBackground, (1280,720))
-
 
         self.rightMovementPressed = False
         self.leftMovementPressed = False
@@ -67,6 +73,17 @@ class Game:
                 if event.key == pygame.K_LEFT:
                     if (not self.leftMovementPressed):
                         self.leftMovementPressed = True
+                if event.key == pygame.K_SPACE:
+                    #Todo: Fix bullets
+                    if ((pygame.time.get_ticks() / 1000) - self.shooting >= 1):
+                        self.bulletShot = True
+                        if (self.facing):
+                            self.bulletRectangle.right = self.playerRectangle.right
+                        else:
+                            self.bulletRectangle.left = self.playerRectangle.left
+                        self.shooting = pygame.time.get_ticks() / 1000
+                        self.screen.blit(self.bullet, self.bulletRectangle)
+                        print(self.shooting)
 
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_RIGHT:
@@ -115,6 +132,8 @@ class Game:
                 self.screen.blit(self.mirroredPlayerMovingSurface, (self.playerRectangle.x, self.playerRectangle.y))
             else:
                 self.screen.blit(self.mirroredPlayerSurface, (self.playerRectangle.x, self.playerRectangle.y))
+        if (self.bulletShot):
+            self.screen.blit(self.bullet, self.bulletRectangle)
 
         pygame.display.update()
 
