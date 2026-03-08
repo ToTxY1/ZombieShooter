@@ -10,11 +10,12 @@ class Game:
         self.gravity = 0
         self.movement = 0
         self.facing = True
+        self.moving = False
 
         """
         player making
         """
-        self.playerSurface = pygame.image.load("Graphics/Player Right Gun.png").convert_alpha()
+        self.playerSurface = pygame.image.load("Graphics/Player Right Gun.png")
         self.playerSurface = pygame.transform.scale(self.playerSurface, (200, 150))
         self.playerMask = pygame.mask.from_surface(self.playerSurface)
         self.playerRectangle = self.playerSurface.get_rect(center=(100, 100))
@@ -23,6 +24,16 @@ class Game:
         self.mirroredPlayerSurface = pygame.transform.scale(self.mirroredPlayerSurface, (200, 150))
         self.mirroredPlayerMask = pygame.mask.from_surface(self.mirroredPlayerSurface)
         self.mirroredPlayerRectangle = self.mirroredPlayerMask.get_rect(center=(100, 100))
+
+        self.playerMovingSurface = pygame.image.load("Graphics/Player Walking Right.png").convert_alpha()
+        self.playerMovingSurface = pygame.transform.scale(self.playerMovingSurface, (200, 150))
+        self.playerMovingMask = pygame.mask.from_surface(self.playerMovingSurface)
+        self.playerMovingRectangle = self.playerMovingMask.get_rect(center=(100, 100))
+
+        self.mirroredPlayerMovingSurface = pygame.image.load("Graphics/Player Walking Left.png").convert_alpha()
+        self.mirroredPlayerMovingSurface = pygame.transform.scale(self.mirroredPlayerMovingSurface, (200, 150))
+        self.mirroredPlayerMovingMask = pygame.mask.from_surface(self.mirroredPlayerSurface)
+        self.mirroredPlayerMovingRectangle = self.playerMovingMask.get_rect(center=(100,100))
 
         #todo: add base player walking tracking movement variable to see if the player is moving and in which direction
         #Images are uploaded
@@ -53,11 +64,9 @@ class Game:
                 if event.key == pygame.K_RIGHT:
                     if (not self.rightMovementPressed):
                         self.rightMovementPressed = True
-                        print(self.facing)
                 if event.key == pygame.K_LEFT:
                     if (not self.leftMovementPressed):
                         self.leftMovementPressed = True
-                        print(self.facing)
 
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_RIGHT:
@@ -82,6 +91,11 @@ class Game:
         if (self.playerRectangle.bottom >= 600):
             self.gravity = 0
 
+        if (self.movement != 0):
+            self.moving = True
+        elif (self.movement == 0):
+            self.moving = False
+
 
     def update(self):
         self.playerRectangle.x += self.movement
@@ -92,9 +106,15 @@ class Game:
         self.screen.fill('purple')
         self.screen.blit(self.gameBackground, (0, 0))
         if (self.facing):
-            self.screen.blit(self.playerSurface, (self.playerRectangle.x, self.playerRectangle.y))
+            if (self.moving):
+                self.screen.blit(self.playerMovingSurface, (self.playerRectangle.x, self.playerRectangle.y))
+            else:
+                self.screen.blit(self.playerSurface, (self.playerRectangle.x, self.playerRectangle.y))
         elif (not self.facing):
-            self.screen.blit(self.mirroredPlayerSurface, (self.playerRectangle.x, self.playerRectangle.y))
+            if (self.moving):
+                self.screen.blit(self.mirroredPlayerMovingSurface, (self.playerRectangle.x, self.playerRectangle.y))
+            else:
+                self.screen.blit(self.mirroredPlayerSurface, (self.playerRectangle.x, self.playerRectangle.y))
 
         pygame.display.update()
 
