@@ -1,4 +1,9 @@
 import pygame
+import sys, os
+
+def resource_path(relative_path):
+    base = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(base, relative_path)
 
 class Game:
     def __init__(self):
@@ -17,22 +22,22 @@ class Game:
         """
         player making
         """
-        self.playerSurface = pygame.image.load("Graphics/Player Right Gun.png")
+        self.playerSurface = pygame.image.load(resource_path("Graphics/Player Right Gun.png")).convert_alpha()
         self.playerSurface = pygame.transform.scale(self.playerSurface, (200, 150))
         self.playerMask = pygame.mask.from_surface(self.playerSurface)
         self.playerRectangle = self.playerSurface.get_rect(center=(100, 100))
 
-        self.mirroredPlayerSurface = pygame.image.load("Graphics/Player Left Gun.png").convert_alpha()
+        self.mirroredPlayerSurface = pygame.image.load(resource_path("Graphics/Player Left Gun.png")).convert_alpha()
         self.mirroredPlayerSurface = pygame.transform.scale(self.mirroredPlayerSurface, (200, 150))
         self.mirroredPlayerMask = pygame.mask.from_surface(self.mirroredPlayerSurface)
         self.mirroredPlayerRectangle = self.mirroredPlayerMask.get_rect(center=(100, 100))
 
-        self.playerMovingSurface = pygame.image.load("Graphics/Player Walking Right.png").convert_alpha()
+        self.playerMovingSurface = pygame.image.load(resource_path("Graphics/Player Walking Right.png")).convert_alpha()
         self.playerMovingSurface = pygame.transform.scale(self.playerMovingSurface, (200, 150))
         self.playerMovingMask = pygame.mask.from_surface(self.playerMovingSurface)
         self.playerMovingRectangle = self.playerMovingMask.get_rect(center=(100, 100))
 
-        self.mirroredPlayerMovingSurface = pygame.image.load("Graphics/Player Walking Left.png").convert_alpha()
+        self.mirroredPlayerMovingSurface = pygame.image.load(resource_path("Graphics/Player Walking Left.png")).convert_alpha()
         self.mirroredPlayerMovingSurface = pygame.transform.scale(self.mirroredPlayerMovingSurface, (200, 150))
         self.mirroredPlayerMovingMask = pygame.mask.from_surface(self.mirroredPlayerSurface)
         self.mirroredPlayerMovingRectangle = self.playerMovingMask.get_rect(center=(100,100))
@@ -40,7 +45,7 @@ class Game:
         """
         Bullet
         """
-        self.bullet = pygame.image.load("Graphics/Bullet.png").convert_alpha()
+        self.bullet = pygame.image.load(resource_path("Graphics/Bullet.png")).convert_alpha()
         self.bullet = pygame.transform.scale(self.bullet, (25, 25))
         self.bulletMask = pygame.mask.from_surface(self.bullet)
         self.bulletRectangle = self.bulletMask.get_rect(center=(100, 535))
@@ -48,7 +53,7 @@ class Game:
         """
         Mirrored Bullet
         """
-        self.mirroredBullet = pygame.image.load("Graphics/Bullet Left.png").convert_alpha()
+        self.mirroredBullet = pygame.image.load(resource_path("Graphics/Bullet Left.png")).convert_alpha()
         self.mirroredBullet = pygame.transform.scale(self.mirroredBullet, (25, 25))
         self.mirroredBulletMask = pygame.mask.from_surface(self.mirroredBullet)
         self.mirroredBulletRectangle = self.mirroredBulletMask.get_rect(center = (100, 535))
@@ -58,7 +63,7 @@ class Game:
         """
         background making
         """
-        self.gameBackground = pygame.image.load("Graphics/game Background.png").convert_alpha()
+        self.gameBackground = pygame.image.load(resource_path("Graphics/game Background.png")).convert_alpha()
         self.gameBackground = pygame.transform.scale(self.gameBackground, (1280,720))
 
         self.rightMovementPressed = False
@@ -77,10 +82,10 @@ class Game:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     self.running = False
-                if event.key == pygame.K_RIGHT:
+                if event.key == pygame.K_RIGHT or event.key == pygame.K_d:
                     if (not self.rightMovementPressed):
                         self.rightMovementPressed = True
-                if event.key == pygame.K_LEFT:
+                if event.key == pygame.K_LEFT or event.key == pygame.K_a:
                     if (not self.leftMovementPressed):
                         self.leftMovementPressed = True
                 if event.key == pygame.K_SPACE:
@@ -99,9 +104,9 @@ class Game:
                         print(self.shooting)
 
             if event.type == pygame.KEYUP:
-                if event.key == pygame.K_RIGHT:
+                if event.key == pygame.K_RIGHT or event.key == pygame.K_d:
                     self.rightMovementPressed = False
-                if event.key == pygame.K_LEFT:
+                if event.key == pygame.K_LEFT or event.key == pygame.K_a:
                     self.leftMovementPressed = False
 
         #variable updating
