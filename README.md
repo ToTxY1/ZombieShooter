@@ -1,10 +1,12 @@
-Mastermind Project
+Zombie Shooter
 
-Running it:
-    To run it you will open a terminal in the projects directory and run the commands that follow:
-        Windows:
-            python main.py
-        Mac:
-            python3 main.py
-        Linux:
-            python main.py
+Installation: 
+    Download the .exe from https://github.com/ToTxY1/ZombieShooter/releases/tag/Primary
+    Run the .exe
+    (May get wwarning saying it is dangerous, it is not and this is caused by me being poor)
+
+Playing:
+    Keybinds:
+        D or Right Arrow: Walk Right
+        A or Left Arrow: Walk Left
+        Space Bar: Shoot
