@@ -12,6 +12,7 @@ class Game:
         self.facing = True
         self.moving = False
         self.shooting = pygame.time.get_ticks() / 1000
+        self.shotFacing = True
 
         """
         player making
@@ -43,6 +44,15 @@ class Game:
         self.bullet = pygame.transform.scale(self.bullet, (25, 25))
         self.bulletMask = pygame.mask.from_surface(self.bullet)
         self.bulletRectangle = self.bulletMask.get_rect(center=(100, 535))
+
+        """
+        Mirrored Bullet
+        """
+        self.mirroredBullet = pygame.image.load("Graphics/Bullet Left.png").convert_alpha()
+        self.mirroredBullet = pygame.transform.scale(self.mirroredBullet, (25, 25))
+        self.mirroredBulletMask = pygame.mask.from_surface(self.mirroredBullet)
+        self.mirroredBulletRectangle = self.mirroredBulletMask.get_rect(center = (100, 535))
+
 
         self.bulletShot = False
         """
@@ -79,10 +89,13 @@ class Game:
                         self.bulletShot = True
                         if (self.facing):
                             self.bulletRectangle.right = self.playerRectangle.right
+                            self.screen.blit(self.bullet, self.bulletRectangle)
+                            self.shotFacing = True
                         else:
-                            self.bulletRectangle.left = self.playerRectangle.left
+                            self.mirroredBulletRectangle.left = self.playerRectangle.left
+                            self.screen.blit(self.mirroredBullet, self.mirroredBulletRectangle)
+                            self.shotFacing = False
                         self.shooting = pygame.time.get_ticks() / 1000
-                        self.screen.blit(self.bullet, self.bulletRectangle)
                         print(self.shooting)
 
             if event.type == pygame.KEYUP:
@@ -92,6 +105,18 @@ class Game:
                     self.leftMovementPressed = False
 
         #variable updating
+        if (self.bulletShot):
+            if (self.shotFacing):
+                self.bulletRectangle.x += 7
+            if (not self.shotFacing):
+                self.mirroredBulletRectangle.x -= 7
+
+
+        if (not self.bulletShot):
+            if (self.shotFacing):
+                self.bulletRectangle.x = self.playerRectangle.x
+            elif (not self.shotFacing):
+                self.mirroredBulletRectangle.x = self.playerRectangle.x
         self.gravity +=1
         if (self.rightMovementPressed and self.leftMovementPressed or not self.leftMovementPressed and not self.rightMovementPressed):
             self.movement = 0
@@ -104,6 +129,10 @@ class Game:
             self.movement = -4
             if (self.facing):
                 self.facing = False
+        if (self.mirroredBulletRectangle.left <= 0):
+            self.bulletShot = False
+        if (self.bulletRectangle.right >= 1280):
+            self.bulletShot = False
 
         if (self.playerRectangle.bottom >= 600):
             self.gravity = 0
@@ -133,7 +162,10 @@ class Game:
             else:
                 self.screen.blit(self.mirroredPlayerSurface, (self.playerRectangle.x, self.playerRectangle.y))
         if (self.bulletShot):
-            self.screen.blit(self.bullet, self.bulletRectangle)
+            if (self.shotFacing):
+                self.screen.blit(self.bullet, self.bulletRectangle)
+            if (not self.shotFacing):
+                self.screen.blit(self.mirroredBullet, self.mirroredBulletRectangle)
 
         pygame.display.update()
 
