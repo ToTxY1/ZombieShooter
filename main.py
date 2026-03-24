@@ -48,7 +48,7 @@ class Game:
         self.bullet = pygame.image.load(resource_path("Graphics/Bullet.png")).convert_alpha()
         self.bullet = pygame.transform.scale(self.bullet, (25, 25))
         self.bulletMask = pygame.mask.from_surface(self.bullet)
-        self.bulletRectangle = self.bulletMask.get_rect(center=(100, 535))
+        self.bulletRectangle = self.bulletMask.get_rect(center=(100, 505))
 
         """
         Mirrored Bullet
@@ -60,6 +60,15 @@ class Game:
 
 
         self.bulletShot = False
+
+        """
+        Multi Bullet Rendering
+        """
+        self.bullets = []
+        self.facingBullets = []
+        self.bulletYeah = []
+        self.bulletNo = []
+
         """
         background making
         """
@@ -96,10 +105,14 @@ class Game:
                             self.bulletRectangle.right = self.playerRectangle.right
                             self.screen.blit(self.bullet, self.bulletRectangle)
                             self.shotFacing = True
+                            self.facingBullets.append(self.bulletRectangle)
+                            self.bulletYeah.append(self.bullet)
                         else:
                             self.mirroredBulletRectangle.left = self.playerRectangle.left
                             self.screen.blit(self.mirroredBullet, self.mirroredBulletRectangle)
                             self.shotFacing = False
+                            self.bullets.append(self.mirroredBulletRectangle)
+                            self.bulletNo.append(self.mirroredBullet)
                         self.shooting = pygame.time.get_ticks() / 1000
                         print(self.shooting)
 
@@ -151,6 +164,15 @@ class Game:
     def update(self):
         self.playerRectangle.x += self.movement
         self.playerRectangle.y += self.gravity
+
+        for i in range (len(self.facingBullets)):
+            if (self.facingBullets[i].x >= 1280):
+                self.facingBullets.pop(i)
+                self.bulletYeah.pop(i)
+        for i in range (len(self.bullets)):
+            if (self.bullets[i].x <= 0):
+                self.bullets.pop(i)
+                self.bulletNo.pop(i)
         pass
 
     def render(self):
@@ -167,10 +189,12 @@ class Game:
             else:
                 self.screen.blit(self.mirroredPlayerSurface, (self.playerRectangle.x, self.playerRectangle.y))
         if (self.bulletShot):
-            if (self.shotFacing):
-                self.screen.blit(self.bullet, self.bulletRectangle)
-            if (not self.shotFacing):
-                self.screen.blit(self.mirroredBullet, self.mirroredBulletRectangle)
+            if (len(self.facingBullets) != 0):
+                for i in range(len(self.facingBullets)):
+                    self.screen.blit(self.bulletYeah[i], self.facingBullets[i])
+            if (len(self.bullets) != 0):
+                for i in range(len(self.bullets)):
+                    self.screen.blit(self.bulletNo[i], self.bullets[i])
 
         pygame.display.update()
 
