@@ -2,6 +2,7 @@ import pygame
 import sys, os
 
 def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
     base = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
     return os.path.join(base, relative_path)
 
@@ -12,189 +13,126 @@ class Game:
         pygame.display.set_caption("Zombie Shooter")
         self.clock = pygame.time.Clock()
         self.running = True
+        
+        # Physics and State
         self.gravity = 0
         self.movement = 0
-        self.facing = True
-        self.moving = False
-        self.shooting = pygame.time.get_ticks() / 1000
-        self.shotFacing = True
+        self.facing_right = True
+        self.last_shot_time = 0  # Changed from self.shooting for clarity
 
-        """
-        player making
-        """
-        self.playerSurface = pygame.image.load(resource_path("Graphics/Player Right Gun.png")).convert_alpha()
-        self.playerSurface = pygame.transform.scale(self.playerSurface, (200, 150))
-        self.playerMask = pygame.mask.from_surface(self.playerSurface)
-        self.playerRectangle = self.playerSurface.get_rect(center=(100, 100))
+        # --- Assets ---
+        # Player Idle
+        self.player_right = pygame.image.load(resource_path("Graphics/Player Right Gun.png")).convert_alpha()
+        self.player_right = pygame.transform.scale(self.player_right, (200, 150))
+        
+        self.player_left = pygame.image.load(resource_path("Graphics/Player Left Gun.png")).convert_alpha()
+        self.player_left = pygame.transform.scale(self.player_left, (200, 150))
 
-        self.mirroredPlayerSurface = pygame.image.load(resource_path("Graphics/Player Left Gun.png")).convert_alpha()
-        self.mirroredPlayerSurface = pygame.transform.scale(self.mirroredPlayerSurface, (200, 150))
-        self.mirroredPlayerMask = pygame.mask.from_surface(self.mirroredPlayerSurface)
-        self.mirroredPlayerRectangle = self.mirroredPlayerMask.get_rect(center=(100, 100))
+        # Player Walking
+        self.walk_right = pygame.image.load(resource_path("Graphics/Player Walking Right.png")).convert_alpha()
+        self.walk_right = pygame.transform.scale(self.walk_right, (200, 150))
+        
+        self.walk_left = pygame.image.load(resource_path("Graphics/Player Walking Left.png")).convert_alpha()
+        self.walk_left = pygame.transform.scale(self.walk_left, (200, 150))
 
-        self.playerMovingSurface = pygame.image.load(resource_path("Graphics/Player Walking Right.png")).convert_alpha()
-        self.playerMovingSurface = pygame.transform.scale(self.playerMovingSurface, (200, 150))
-        self.playerMovingMask = pygame.mask.from_surface(self.playerMovingSurface)
-        self.playerMovingRectangle = self.playerMovingMask.get_rect(center=(100, 100))
+        # Bullets
+        self.bullet_img_right = pygame.image.load(resource_path("Graphics/Bullet.png")).convert_alpha()
+        self.bullet_img_right = pygame.transform.scale(self.bullet_img_right, (25, 25))
+        
+        self.bullet_img_left = pygame.image.load(resource_path("Graphics/Bullet Left.png")).convert_alpha()
+        self.bullet_img_left = pygame.transform.scale(self.bullet_img_left, (25, 25))
 
-        self.mirroredPlayerMovingSurface = pygame.image.load(resource_path("Graphics/Player Walking Left.png")).convert_alpha()
-        self.mirroredPlayerMovingSurface = pygame.transform.scale(self.mirroredPlayerMovingSurface, (200, 150))
-        self.mirroredPlayerMovingMask = pygame.mask.from_surface(self.mirroredPlayerSurface)
-        self.mirroredPlayerMovingRectangle = self.playerMovingMask.get_rect(center=(100,100))
+        # Player Rect
+        self.player_rect = self.player_right.get_rect(center=(100, 500))
 
-        """
-        Bullet
-        """
-        self.bullet = pygame.image.load(resource_path("Graphics/Bullet.png")).convert_alpha()
-        self.bullet = pygame.transform.scale(self.bullet, (25, 25))
-        self.bulletMask = pygame.mask.from_surface(self.bullet)
-        self.bulletRectangle = self.bulletMask.get_rect(center=(100, 505))
+        # Bullet Lists (Store dictionaries or objects to keep track of rect + direction)
+        self.active_bullets = [] # List of [pygame.Rect, direction_multiplier]
 
-        """
-        Mirrored Bullet
-        """
-        self.mirroredBullet = pygame.image.load(resource_path("Graphics/Bullet Left.png")).convert_alpha()
-        self.mirroredBullet = pygame.transform.scale(self.mirroredBullet, (25, 25))
-        self.mirroredBulletMask = pygame.mask.from_surface(self.mirroredBullet)
-        self.mirroredBulletRectangle = self.mirroredBulletMask.get_rect(center = (100, 535))
-
-
-        self.bulletShot = False
-
-        """
-        Multi Bullet Rendering
-        """
-        self.bullets = []
-        self.facingBullets = []
-        self.bulletYeah = []
-        self.bulletNo = []
-
-        """
-        background making
-        """
+        # Background
         self.gameBackground = pygame.image.load(resource_path("Graphics/game Background.png")).convert_alpha()
-        self.gameBackground = pygame.transform.scale(self.gameBackground, (1280,720))
+        self.gameBackground = pygame.transform.scale(self.gameBackground, (1280, 720))
 
-        self.rightMovementPressed = False
-        self.leftMovementPressed = False
-
-    def player_regenerating(self):
-        self.playerMask = pygame.mask.from_surface(self.playerSurface)
-        self.playerRectangle = self.playerMask.get_rect(center=(self.playerRectangle.x, self.playerRectangle.y))
-
+        # Controls
+        self.right_pressed = False
+        self.left_pressed = False
 
     def handle_events(self):
-        #Pygame events
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
+            
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     self.running = False
-                if event.key == pygame.K_RIGHT or event.key == pygame.K_d:
-                    if (not self.rightMovementPressed):
-                        self.rightMovementPressed = True
-                if event.key == pygame.K_LEFT or event.key == pygame.K_a:
-                    if (not self.leftMovementPressed):
-                        self.leftMovementPressed = True
+                if event.key in (pygame.K_RIGHT, pygame.K_d):
+                    self.right_pressed = True
+                if event.key in (pygame.K_LEFT, pygame.K_a):
+                    self.left_pressed = True
+                
                 if event.key == pygame.K_SPACE:
-                    #Todo: Fix bullets
-                    if ((pygame.time.get_ticks() / 1000) - self.shooting >= 1):
-                        self.bulletShot = True
-                        if (self.facing):
-                            self.bulletRectangle.right = self.playerRectangle.right
-                            self.screen.blit(self.bullet, self.bulletRectangle)
-                            self.shotFacing = True
-                            self.facingBullets.append(self.bulletRectangle)
-                            self.bulletYeah.append(self.bullet)
-                        else:
-                            self.mirroredBulletRectangle.left = self.playerRectangle.left
-                            self.screen.blit(self.mirroredBullet, self.mirroredBulletRectangle)
-                            self.shotFacing = False
-                            self.bullets.append(self.mirroredBulletRectangle)
-                            self.bulletNo.append(self.mirroredBullet)
-                        self.shooting = pygame.time.get_ticks() / 1000
-                        print(self.shooting)
+                    current_time = pygame.time.get_ticks()
+                    # Cooldown check: 500ms (0.5 seconds)
+                    if current_time - self.last_shot_time > 500:
+                        self.shoot()
+                        self.last_shot_time = current_time
 
             if event.type == pygame.KEYUP:
-                if event.key == pygame.K_RIGHT or event.key == pygame.K_d:
-                    self.rightMovementPressed = False
-                if event.key == pygame.K_LEFT or event.key == pygame.K_a:
-                    self.leftMovementPressed = False
+                if event.key in (pygame.K_RIGHT, pygame.K_d):
+                    self.right_pressed = False
+                if event.key in (pygame.K_LEFT, pygame.K_a):
+                    self.left_pressed = False
 
-        #variable updating
-        if (self.bulletShot):
-            if (self.shotFacing):
-                self.bulletRectangle.x += 7
-            if (not self.shotFacing):
-                self.mirroredBulletRectangle.x -= 7
-
-
-        if (not self.bulletShot):
-            if (self.shotFacing):
-                self.bulletRectangle.x = self.playerRectangle.x
-            elif (not self.shotFacing):
-                self.mirroredBulletRectangle.x = self.playerRectangle.x
-        self.gravity +=1
-        if (self.rightMovementPressed and self.leftMovementPressed or not self.leftMovementPressed and not self.rightMovementPressed):
-            self.movement = 0
-
-        if (self.rightMovementPressed and not self.leftMovementPressed):
-            self.movement = 4
-            if (not self.facing):
-                self.facing = True
-        if (self.leftMovementPressed and not self.rightMovementPressed):
-            self.movement = -4
-            if (self.facing):
-                self.facing = False
-        if (self.mirroredBulletRectangle.left <= 0):
-            self.bulletShot = False
-        if (self.bulletRectangle.right >= 1280):
-            self.bulletShot = False
-
-        if (self.playerRectangle.bottom >= 600):
-            self.gravity = 0
-
-        if (self.movement != 0):
-            self.moving = True
-        elif (self.movement == 0):
-            self.moving = False
-
+    def shoot(self):
+        if self.facing_right:
+            # Create a NEW rect instance for this specific bullet
+            new_rect = self.bullet_img_right.get_rect(midleft=self.player_rect.midright)
+            self.active_bullets.append({"rect": new_rect, "speed": 10, "img": self.bullet_img_right})
+        else:
+            new_rect = self.bullet_img_left.get_rect(midright=self.player_rect.midleft)
+            self.active_bullets.append({"rect": new_rect, "speed": -10, "img": self.bullet_img_left})
 
     def update(self):
-        self.playerRectangle.x += self.movement
-        self.playerRectangle.y += self.gravity
+        # Handle Movement Logic
+        if self.right_pressed and not self.left_pressed:
+            self.movement = 5
+            self.facing_right = True
+        elif self.left_pressed and not self.right_pressed:
+            self.movement = -5
+            self.facing_right = False
+        else:
+            self.movement = 0
 
-        for i in range (len(self.facingBullets)):
-            if (self.facingBullets[i].x >= 1280):
-                self.facingBullets.pop(i)
-                self.bulletYeah.pop(i)
-        for i in range (len(self.bullets)):
-            if (self.bullets[i].x <= 0):
-                self.bullets.pop(i)
-                self.bulletNo.pop(i)
-        pass
+        # Apply Movement & Gravity
+        self.player_rect.x += self.movement
+        self.player_rect.y += self.gravity
+        self.gravity += 1
+
+        # Floor Collision
+        if self.player_rect.bottom >= 600:
+            self.player_rect.bottom = 600
+            self.gravity = 0
+
+        # Update Bullets and Remove if off-screen
+        for b in self.active_bullets:
+            b["rect"].x += b["speed"]
+        
+        # This list comprehension safely removes bullets out of bounds
+        self.active_bullets = [b for b in self.active_bullets if -50 < b["rect"].x < 1330]
 
     def render(self):
-        self.screen.fill('purple')
         self.screen.blit(self.gameBackground, (0, 0))
-        if (self.facing):
-            if (self.moving):
-                self.screen.blit(self.playerMovingSurface, (self.playerRectangle.x, self.playerRectangle.y))
-            else:
-                self.screen.blit(self.playerSurface, (self.playerRectangle.x, self.playerRectangle.y))
-        elif (not self.facing):
-            if (self.moving):
-                self.screen.blit(self.mirroredPlayerMovingSurface, (self.playerRectangle.x, self.playerRectangle.y))
-            else:
-                self.screen.blit(self.mirroredPlayerSurface, (self.playerRectangle.x, self.playerRectangle.y))
-        if (self.bulletShot):
-            if (len(self.facingBullets) != 0):
-                for i in range(len(self.facingBullets)):
-                    self.screen.blit(self.bulletYeah[i], self.facingBullets[i])
-            if (len(self.bullets) != 0):
-                for i in range(len(self.bullets)):
-                    self.screen.blit(self.bulletNo[i], self.bullets[i])
+
+        # Draw Player
+        if self.facing_right:
+            img = self.walk_right if self.movement != 0 else self.player_right
+        else:
+            img = self.walk_left if self.movement != 0 else self.player_left
+        
+        self.screen.blit(img, self.player_rect)
+
+        # Draw Bullets
+        for b in self.active_bullets:
+            self.screen.blit(b["img"], b["rect"])
 
         pygame.display.update()
 
